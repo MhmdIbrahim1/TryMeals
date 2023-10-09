@@ -2,10 +2,12 @@ package com.example.trymeals
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.trymeals.adapter.MealsAdapter
 import com.example.trymeals.databinding.ActivityMainBinding
+import com.example.trymeals.util.NetworkResult
 import com.example.trymeals.viewmodel.MealsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -25,8 +27,20 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             viewModel.categories.collectLatest {
-                adapter.submitList(it?.categories)
-                binding.categoryRv.adapter = adapter
+                when(it){
+                    is NetworkResult.Success -> {
+                        adapter.differ.submitList(it.data?.categories)
+                        binding.categoryRv.adapter = adapter
+                        binding.progressBar.visibility = View.GONE
+                    }
+                    is NetworkResult.Error -> {
+                        binding.progressBar.visibility = View.GONE
+                    }
+                    is NetworkResult.Loading -> {
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+                    else -> Unit
+                }
             }
         }
     }

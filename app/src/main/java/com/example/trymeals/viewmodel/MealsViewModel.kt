@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.entity.CategoryResponse
 import com.example.domain.usecase.GetMeals
+import com.example.trymeals.util.NetworkResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,14 +17,16 @@ class MealsViewModel @Inject constructor(
     private val getMealsUseCase: GetMeals
 ) : ViewModel(){
 
-    private val  _categories : MutableStateFlow<CategoryResponse?> = MutableStateFlow(null)
+    private val  _categories : MutableStateFlow<NetworkResult<CategoryResponse?>> = MutableStateFlow(NetworkResult.UnSpecified())
     val categories = _categories.asStateFlow()
-
 
     fun getMeals(){
         viewModelScope.launch {
+            _categories.value = NetworkResult.Loading()
+        }
+        viewModelScope.launch {
            try {
-               _categories.value = getMealsUseCase()
+               _categories.value = NetworkResult.Success(getMealsUseCase())
            }catch (e: Exception){
                Log.e("MealsViewModel", "getMeals: ${e.message.toString()}")
            }
