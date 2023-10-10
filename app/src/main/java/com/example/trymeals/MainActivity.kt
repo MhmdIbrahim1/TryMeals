@@ -2,6 +2,7 @@ package com.example.trymeals
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -15,29 +16,33 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private val viewModel by viewModels<MealsViewModel>()
     private lateinit var binding: ActivityMainBinding
+    private val viewModel by viewModels<MealsViewModel>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding= ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         viewModel.getMeals()
         val adapter = MealsAdapter()
 
         lifecycleScope.launch {
-            viewModel.categories.collectLatest {
+            viewModel.categories.observe(this@MainActivity){
                 when(it){
+
+                    is NetworkResult.Loading ->{
+                        binding.progressBar.visibility = View.VISIBLE
+                    }
+
                     is NetworkResult.Success -> {
+                        binding.progressBar.visibility = View.GONE
                         adapter.differ.submitList(it.data?.categories)
                         binding.categoryRv.adapter = adapter
-                        binding.progressBar.visibility = View.GONE
                     }
-                    is NetworkResult.Error -> {
+
+                    is NetworkResult.Error ->{
                         binding.progressBar.visibility = View.GONE
-                    }
-                    is NetworkResult.Loading -> {
-                        binding.progressBar.visibility = View.VISIBLE
+                        Log.e("MainActivity", "onCreate: ${it.message.toString()}" )
                     }
                     else -> Unit
                 }

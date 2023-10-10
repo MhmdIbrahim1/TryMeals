@@ -1,6 +1,7 @@
 package com.example.trymeals.viewmodel
 
 import android.util.Log
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.domain.entity.CategoryResponse
@@ -15,22 +16,23 @@ import javax.inject.Inject
 @HiltViewModel
 class MealsViewModel @Inject constructor(
     private val getMealsUseCase: GetMeals
-) : ViewModel(){
+):ViewModel()  {
 
-    private val  _categories : MutableStateFlow<NetworkResult<CategoryResponse?>> = MutableStateFlow(NetworkResult.UnSpecified())
-    val categories = _categories.asStateFlow()
+    private val _categories = MutableLiveData<NetworkResult<CategoryResponse?>>()
+    //private val _categories  = MutableStateFlow<NetworkResult<CategoryResponse?>>(NetworkResult.UnSpecified())
+    val categories = _categories
+    //val categories = _categories.asStateFlow()
 
-    fun getMeals(){
+    fun getMeals() {
         viewModelScope.launch {
-            _categories.value = NetworkResult.Loading()
+            _categories.postValue(NetworkResult.Loading())
         }
         viewModelScope.launch {
-           try {
-               _categories.value = NetworkResult.Success(getMealsUseCase())
-           }catch (e: Exception){
-               Log.e("MealsViewModel", "getMeals: ${e.message.toString()}")
-           }
+            try {
+                _categories.postValue(NetworkResult.Success(getMealsUseCase()))
+            } catch (e: Exception) {
+                Log.e("MealsViewModel", "getMeals: ${e.message.toString()}")
+            }
         }
     }
-
 }
